@@ -22,6 +22,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 {% endblock %}
 
 {% block content %}
+  <p>Current streak: {{ highScore }}</p>
+  <br />
   {{board_image}}
   <p>{{question_text}}</p>
   {% if enable_answers == True %}

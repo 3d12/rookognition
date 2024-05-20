@@ -27,6 +27,9 @@ bp = Blueprint('game', __name__)
 
 @bp.route('/', methods=('GET','POST'))
 def index():
+    # Initialize session high score
+    if session.get('highScore') == None:
+        session['highScore'] = 0
     if request.method == 'POST':
         if request.form.get('newBoard') is not None:
             session['board'] = None
@@ -39,6 +42,7 @@ def index():
                 color = session['color']
                 attackers = getAttackers(new_board, target_square, color=color)
                 correct = (len(attackers) > 0) == answer
+                session['highScore'] = session['highScore'] + 1 if correct else 0
                 flash('Correct!' if correct else 'Incorrect!')
                 enable_answers = False
                 arrows = generateAttackerArrows(attackers, target_square)
@@ -47,7 +51,8 @@ def index():
                                        board_image=answer_image,
                                        num_moves=new_board.ply(),
                                        question_text=generateQuestionText(color, target_square),
-                                       enable_answers=enable_answers
+                                       enable_answers=enable_answers,
+                                       highScore=session['highScore']
                                        )
                 
 
@@ -59,7 +64,7 @@ def index():
     else:
         new_board = generateRandomBoard()
         target_square = selectRandomSquare()
-        color = random.sample([chess.WHITE, chess.BLACK, 2], 1)[0]
+        color = selectRandomColor()
     attackers = getAttackers(new_board, target_square, color=color)
     board_image = Markup(generateBoardImage(new_board, target_square))
     session['board'] = new_board.fen()
@@ -70,7 +75,8 @@ def index():
                            board_image=board_image,
                            num_moves=new_board.ply(),
                            question_text=generateQuestionText(color, target_square),
-                           enable_answers=True
+                           enable_answers=True,
+                           highScore=session['highScore']
                            )
 
 def generateRandomBoard(num_moves=None, rand_low=20, rand_high=60) -> chess.Board:
@@ -94,6 +100,12 @@ def generateBoardImage(board, target_square=None, arrows=None, size=350) -> str:
 def selectRandomSquare() -> chess.Square:
     return random.sample(chess.SQUARES, 1)[0]
 
+def selectRandomColor() -> int:
+    return random.sample([chess.WHITE, chess.BLACK, 2], 1)[0]
+
+def colorToName(color) -> str:
+    return (chess.COLOR_NAMES + ["either color"])[color]
+
 def getAttackers(board, square, color=None) -> list:
     if color == None or color == 2:
         white_attackers = board.attackers(chess.WHITE, square)
@@ -109,4 +121,4 @@ def generateAttackerArrows(attackers, target_square) -> list:
     return arrows
 
 def generateQuestionText(color, target_square) -> str:
-    return f'Is {(chess.COLOR_NAMES + ["either color"])[color]} attacking square {chess.SQUARE_NAMES[target_square]}?'
+    return f'Is {colorToName(color)} attacking square {chess.SQUARE_NAMES[target_square]}?'

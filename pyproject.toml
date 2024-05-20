@@ -1,6 +1,6 @@
 [project]
 name = "rookognition"
-version = "1.0.0"
+version = "1.0.3"
 authors = [
   { name="Nick Edner", email="nick@edner.dev" },
 ]

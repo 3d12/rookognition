@@ -26,7 +26,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
     {% block header %}{% endblock %}
   </header>
   {% for message in get_flashed_messages() %}
-    <div class="flash">{{ message }}</div>
+    {% if message == 'Incorrect!' %}
+      <div class="flash" style="background:#cc0000;">{{ message }}</div>
+    {% else %}
+      <div class="flash">{{ message }}</div>
+    {% endif%}
   {% endfor %}
   {% block content %}{% endblock %}
 </section>
