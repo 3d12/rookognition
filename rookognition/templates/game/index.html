@@ -22,10 +22,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 {% endblock %}
 
 {% block content %}
-  <p>Current streak: {{ currentStreak }}</p>
-  <br />
-  <p>High score: {{ highScore }}</p>
-  <br />
+  <div class="score">
+    <p>Current streak: {{ currentStreak }}</p>
+    <p>High score: {{ highScore }}</p>
+  </div>
   {{board_image}}
   <p>{{question_text}}</p>
   {% if enable_answers == True %}
