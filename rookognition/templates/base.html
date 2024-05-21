@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 <!DOCTYPE html>
 <title>{% block title %}{% endblock %} - Rookognition</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='font-awesome/css/font-awesome.min.css') }}">
 <nav>
   <h1><a href="{{ url_for('index') }}">Rookognition</a></h1>
 </nav>
@@ -36,3 +37,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
   {% endfor %}
   {% block content %}{% endblock %}
 </section>
+<footer>
+  <p>v{{ app_config.VERSION }} <a href="https://github.com/3d12/rookognition"><i class="fa fa-github"></i></a></p>
+</footer>

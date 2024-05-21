@@ -20,6 +20,8 @@ from flask import Flask
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+__version__ = "1.0.6"
+
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
@@ -29,7 +31,8 @@ def create_app(test_config=None):
             # Registration is disabled by default, can be enabled via admin control panel
             REGISTRATION_ENABLED=False,
             # First user created will have admin role by default
-            CREATE_FIRST_USER_AS_ADMIN=True
+            CREATE_FIRST_USER_AS_ADMIN=True,
+            VERSION = __version__
             )
 
     if test_config is None:
