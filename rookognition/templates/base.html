@@ -28,6 +28,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
   {% for message in get_flashed_messages() %}
     {% if message == 'Incorrect!' %}
       <div class="flash" style="background:#cc0000;">{{ message }}</div>
+    {% elif message == 'Correct!' %}
+      <div class="flash" style="background:#00cc00;">{{ message }}</div>
     {% else %}
       <div class="flash">{{ message }}</div>
     {% endif%}

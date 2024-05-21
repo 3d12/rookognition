@@ -30,9 +30,13 @@ def index():
     # Initialize session high score
     if session.get('highScore') == None:
         session['highScore'] = 0
+    if session.get('currentStreak') == None:
+        session['currentStreak'] = 0
     if request.method == 'POST':
-        if request.form.get('newBoard') is not None:
+        if request.form.get('newBoard') != None:
             session['board'] = None
+            if session.get('answered') == None:
+                session['currentStreak'] = 0
             return redirect(url_for('index'))
         if session.get('board') != None:
             if request.form.get('yes') is not None or request.form.get('no') is not None:
@@ -42,7 +46,9 @@ def index():
                 color = session['color']
                 attackers = getAttackers(new_board, target_square, color=color)
                 correct = (len(attackers) > 0) == answer
-                session['highScore'] = session['highScore'] + 1 if correct else 0
+                session['currentStreak'] = session['currentStreak'] + 1 if correct else 0
+                session['highScore'] = session['currentStreak'] if session['currentStreak'] > session['highScore'] else session['highScore']
+                session['answered'] = True
                 flash('Correct!' if correct else 'Incorrect!')
                 enable_answers = False
                 arrows = generateAttackerArrows(attackers, target_square)
@@ -52,6 +58,7 @@ def index():
                                        num_moves=new_board.ply(),
                                        question_text=generateQuestionText(color, target_square),
                                        enable_answers=enable_answers,
+                                       currentStreak=session['currentStreak'],
                                        highScore=session['highScore']
                                        )
                 
@@ -70,12 +77,14 @@ def index():
     session['board'] = new_board.fen()
     session['target_square'] = target_square
     session['color'] = color
+    session['answered'] = None
     return render_template('game/index.html',
                            num_attackers=len(attackers),
                            board_image=board_image,
                            num_moves=new_board.ply(),
                            question_text=generateQuestionText(color, target_square),
                            enable_answers=True,
+                           currentStreak=session['currentStreak'],
                            highScore=session['highScore']
                            )
 

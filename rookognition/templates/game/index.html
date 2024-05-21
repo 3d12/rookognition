@@ -22,7 +22,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 {% endblock %}
 
 {% block content %}
-  <p>Current streak: {{ highScore }}</p>
+  <p>Current streak: {{ currentStreak }}</p>
+  <br />
+  <p>High score: {{ highScore }}</p>
   <br />
   {{board_image}}
   <p>{{question_text}}</p>
