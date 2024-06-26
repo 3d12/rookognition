@@ -49,6 +49,7 @@ def index():
                 session['currentStreak'] = session['currentStreak'] + 1 if correct else 0
                 session['highScore'] = session['currentStreak'] if session['currentStreak'] > session['highScore'] else session['highScore']
                 session['answered'] = True
+                session['board'] = None
                 flash('Correct!' if correct else 'Incorrect!')
                 enable_answers = False
                 arrows = generateAttackerArrows(attackers, target_square)
