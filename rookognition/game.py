@@ -22,11 +22,13 @@ from werkzeug.exceptions import abort
 import chess
 import random
 import chess.svg
+import time
 
 bp = Blueprint('game', __name__)
 
 @bp.route('/', methods=('GET','POST'))
 def index():
+    time_start = time.perf_counter_ns()
     # Initialize session high score
     if session.get('highScore') == None:
         session['highScore'] = 0
@@ -60,7 +62,8 @@ def index():
                                        question_text=generateQuestionText(color, target_square),
                                        enable_answers=enable_answers,
                                        currentStreak=session['currentStreak'],
-                                       highScore=session['highScore']
+                                       highScore=session['highScore'],
+                                       time_to_generate=(round((time.perf_counter_ns()-time_start)/1000000000,5))
                                        )
                 
 
@@ -86,7 +89,8 @@ def index():
                            question_text=generateQuestionText(color, target_square),
                            enable_answers=True,
                            currentStreak=session['currentStreak'],
-                           highScore=session['highScore']
+                           highScore=session['highScore'],
+                           time_to_generate=(round((time.perf_counter_ns()-time_start)/1000000000,5))
                            )
 
 def generateRandomBoard(num_moves=None, rand_low=20, rand_high=60) -> chess.Board:
@@ -99,7 +103,7 @@ def generateRandomBoard(num_moves=None, rand_low=20, rand_high=60) -> chess.Boar
             new_board.push(random.sample(legal_moves, 1)[0])
     return new_board
 
-def generateBoardImage(board, target_square=None, arrows=None, size=350) -> str:
+def generateBoardImage(board, target_square=None, arrows=None, size=None) -> str:
     if target_square == None:
         return chess.svg.board(board, size=size)
     if arrows == None:

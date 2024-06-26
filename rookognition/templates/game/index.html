@@ -18,24 +18,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 {% extends 'base.html' %}
 
 {% block header %}
+<!--
 <h1>{% block title %}Board - {{num_moves}} moves{% endblock %}</h1>
+-->
 {% endblock %}
 
 {% block content %}
-  <div class="score">
-    <p>Current streak: {{ currentStreak }}</p>
-    <p>High score: {{ highScore }}</p>
-  </div>
   {{board_image}}
-  <p>{{question_text}}</p>
-  {% if enable_answers == True %}
-  <form method="post">
-    <input type="submit" name="yes" value="Yes">
-    <input type="submit" name="no" value="No">
-  </form>
-  <br />
-  {% endif %}
-  <form method="post">
-    <input type="submit" name="newBoard" value="New Board">
-  </form>
 {% endblock %}
