@@ -49,7 +49,7 @@ jobs:
               pip install rookognition-*.whl
               # Generate new secret key for cookie encryption
               mkdir -p ./.venv/var/rookognition-instance
-              echo "SECRET_KEY = '$(python -c \"import secrets; print(secrets.token_hex())\")'" > ./.venv/var/rookognition-instance/config.py
+              echo \"SECRET_KEY = \'$(python -c \"import secrets; print(secrets.token_hex())\")\'\" > ./.venv/var/rookognition-instance/config.py
               # Install waitress
               pip install waitress
               # Use waitress to serve app
