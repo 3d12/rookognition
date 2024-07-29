@@ -1,0 +1,59 @@
+name: Python Deploy
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  run-tests:
+    name: Run Tests
+    uses: ./.github/workflows/python-tests.yml
+  deploy:
+    name: Deploy to Production
+    needs: [run-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install Build Dependencies
+        run: |
+          pip install build
+      - name: Build
+        run: |
+          python -m build --wheel
+      - name: Copy Wheel to Server
+        uses: easingthemes/ssh-deploy@v5.1.0
+        with:
+            SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+            ARGS: "-rlgoDzvc -i --delete"
+            SOURCE: "dist/"
+            REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+            REMOTE_USER: ${{ secrets.REMOTE_USER }}
+            TARGET: ${{ secrets.REMOTE_TARGET }}
+            EXCLUDE: "dist/"
+            SCRIPT_BEFORE: |
+              # Stop currently-running app here
+              screen -S rookognition -X quit
+
+              # If this app ever maintains instance data,
+              #   will need to preserve that here
+
+              rm -rf ${{ secrets.REMOTE_TARGET }}
+            SCRIPT_AFTER: |
+              # Setup venv
+              cd ${{ secrets.REMOTE_TARGET }}
+              python -m venv .venv
+              source .venv/bin/activate
+              # Install app
+              pip install rookognition-*.whl
+              # Generate new secret key for cookie encryption
+              mkdir -p ./.venv/var/rookognition-instance
+              echo "SECRET_KEY = '$(python -c "import secrets; print(secrets.token_hex())")'" > ./.venv/var/rookognition-instance/config.py
+              # Install waitress
+              pip install waitress
+              # Use waitress to serve app
+              screen -dm -S rookognition waitress-serve --call 'rookognition:create_app'

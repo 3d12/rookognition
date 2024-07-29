@@ -1,0 +1,26 @@
+name: Python Tests
+
+on: [workflow_call]
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install App and Test Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[test]
+      - name: Test with Pytest
+        run: |
+          python -m pytest -v
+      - name: Run Coverage
+        run: |
+          python -m coverage run -m pytest
+      - name: Coverage Report
+        run: python -m coverage report
