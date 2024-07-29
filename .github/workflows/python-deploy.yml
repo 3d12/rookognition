@@ -3,19 +3,16 @@ name: Python Deploy
 on: [push]
 
 jobs:
+  run-tests:
+    uses: ./.github/workflows/python-tests.yml
   deploy:
+    name: Deploy to Production
+    needs: [run-tests]
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-      - name: Install App and Build Dependencies
+      - name: Install Build Dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install .[deploy]
+          pip install build
       - name: Build
         run: |
           python -m build --wheel
@@ -27,7 +24,9 @@ jobs:
             SOURCE: "dist/"
             REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
             REMOTE_USER: ${{ secrets.REMOTE_USER }}
-            TARGET: ${{ secrets.REMOTE_TARGET }}
+            TARGET: ${{ format('{0}{1}',secrets.REMOTE_TARGET,'_copy')
             EXCLUDE: "dist/"
             SCRIPT_AFTER: |
-              echo "done!"
+              rm -rf ${{ secrets.REMOTE_TARGET }} && \
+              cp -r ${{ format('{0}{1}',secrets.REMOTE_TARGET,'_copy') }} ${{ secrets.REMOTE_TARGET }} && \
+              rm -rf ${{ format('{0}{1}',secrets.REMOTE_TARGET,'_copy') }}
