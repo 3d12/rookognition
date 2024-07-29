@@ -20,7 +20,7 @@ from flask import Flask
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-__version__ = "1.1.2"
+__version__ = "1.1.3"
 
 def create_app(test_config=None):
     # create and configure the app
