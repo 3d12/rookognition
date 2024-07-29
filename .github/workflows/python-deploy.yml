@@ -3,7 +3,7 @@ name: Python Deploy
 on: [release]
 
 jobs:
-  run-tests:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
