@@ -2,8 +2,7 @@ name: Python Deploy
 
 on:
   push:
-    branches:
-      - 'main'
+    if: github.ref == 'refs/heads/main'
     tags:
       - '*'
 
