@@ -15,7 +15,7 @@ jobs:
       - name: Install Dependencies (replace with requirements txt)
         run: |
           python -m pip install --upgrade pip
-          pip install flask chess
+          pip install .[test]
       - name: Test with Pytest
         run: |
           python -m pip install pytest
