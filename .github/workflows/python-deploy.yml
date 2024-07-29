@@ -1,8 +1,9 @@
 name: Python Deploy
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - '*'
 
 jobs:
   run-tests:
