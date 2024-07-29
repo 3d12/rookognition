@@ -16,6 +16,10 @@ test = [
   "pytest",
   "coverage"
 ]
+deploy = [
+  "build",
+  "waitress"
+]
 
 [build-system]
 requires = ["flit_core<4"]
