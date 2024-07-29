@@ -53,4 +53,4 @@ jobs:
               # Install waitress
               pip install waitress
               # Use waitress to serve app
-              # ???
+              waitress-serve --call 'rookognition:create_app' &
