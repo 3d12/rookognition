@@ -10,7 +10,7 @@ jobs:
     name: Run Tests
     uses: ./.github/workflows/python-tests.yml
   deploy:
-    if: github.ref == "refs/heads/main"
+    if: github.ref == 'refs/heads/main'
     name: Deploy to Production
     needs: [run-tests]
     runs-on: ubuntu-latest
