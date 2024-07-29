@@ -24,7 +24,7 @@ jobs:
             SOURCE: "dist/"
             REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
             REMOTE_USER: ${{ secrets.REMOTE_USER }}
-            TARGET: ${{ format('{0}{1}',secrets.REMOTE_TARGET,'_copy')
+            TARGET: ${{ format('{0}{1}',secrets.REMOTE_TARGET,'_copy') }}
             EXCLUDE: "dist/"
             SCRIPT_AFTER: |
               rm -rf ${{ secrets.REMOTE_TARGET }} && \
