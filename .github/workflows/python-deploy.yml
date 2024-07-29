@@ -1,6 +1,8 @@
 name: Python Deploy
 
-on: [push, release]
+on:
+  release:
+    types: [published]
 
 jobs:
   run-tests:
