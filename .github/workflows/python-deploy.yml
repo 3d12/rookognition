@@ -23,7 +23,7 @@ jobs:
       - name: Build
         run: |
           python -m build --wheel
-      - name: Deploy to Server
+      - name: Copy Wheel to Server
         uses: easingthemes/ssh-deploy@v5.1.0
         with:
             SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -34,4 +34,23 @@ jobs:
             TARGET: ${{ secrets.REMOTE_TARGET }}
             EXCLUDE: "dist/"
             SCRIPT_BEFORE: |
+              # Stop currently-running app here
+
+              # If this app ever maintains instance data,
+              #   will need to preserve that here
+
               rm -rf ${{ secrets.REMOTE_TARGET }}
+            SCRIPT_AFTER: |
+              # Setup venv
+              cd ${{ secrets.REMOTE_TARGET }}
+              python -m venv .venv
+              source .venv/bin/activate
+              # Install app
+              pip install rookognition-*.whl
+              # Generate new secret key for cookie encryption
+              mkdir -p ./.venv/var/rookognition-instance
+              echo "SECRET_KEY = '$(python -c \"import secrets; print(secrets.token_hex())\")'" > ./.venv/var/rookognition-instance/config.py
+              # Install waitress
+              pip install waitress
+              # Use waitress to serve app
+              # ???
