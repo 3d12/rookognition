@@ -2,6 +2,8 @@ name: Python Deploy
 
 on:
   push:
+    branches:
+      - 'main'
     tags:
       - '*'
 
