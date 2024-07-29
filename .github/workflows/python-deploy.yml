@@ -1,6 +1,6 @@
 name: Python Deploy
 
-on: [release]
+on: [push]
 
 jobs:
   deploy:
