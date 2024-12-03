@@ -98,8 +98,7 @@ def generateRandomBoard(num_moves=None, rand_low=20, rand_high=60) -> chess.Boar
         num_moves = random.randint(rand_low, rand_high)
     new_board = chess.Board()
     for _ in range(num_moves):
-        legal_moves = list(new_board.legal_moves)
-        if len(legal_moves) > 0:
+        if has_legal_en_passant():
             new_board.push(random.sample(legal_moves, 1)[0])
     return new_board
 
