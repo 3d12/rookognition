@@ -19,120 +19,87 @@ from flask import (
 from markupsafe import Markup
 from werkzeug.exceptions import abort
 
-import chess
-import random
-import chess.svg
-import time
+from .timer import Timer
+from .question import Difficulty, QUESTION_TYPE
 
 bp = Blueprint('game', __name__)
 
 @bp.route('/', methods=('GET','POST'))
 def index():
-    time_start = time.perf_counter_ns()
-    # Initialize session high score
-    if session.get('highScore') == None:
-        session['highScore'] = 0
-    if session.get('currentStreak') == None:
-        session['currentStreak'] = 0
+    page_load_time = Timer()
+
+    # Check difficulty, render difficulty select if none
+    if session.get('difficulty') == None:
+        # TODO: Implement difficulty select template
+        # return render_template('game/difficulty.html', time_to_generate=page_load_time.elapsed())
+        # Default to Easy until implemented
+        session['difficulty'] = Difficulty.EASY.value
+
     if request.method == 'POST':
+        # Check for answer, if exists we can check it for correctness
+        if request.form.get('answer') != None:
+            answer = request.form.get('answer')
+            session['answered'] = True
+            question = session.get('question',{})
+            correct = answer == question.get('correct_answer')
+            if correct == True:
+                msg = 'Correct!'
+                session['current_streak'] = session.get('current_streak',0) + 1
+                if session.get('current_streak',0) > session.get('high_score',0):
+                    session['high_score'] = session['current_streak']
+            else:
+                msg = 'Incorrect!'
+                session['current_streak'] = 0
+            flash(msg)
+            return display_page(page_load_time)
+
+        # Check for new board request
         if request.form.get('newBoard') != None:
             session['board'] = None
+            # If current question is not answered, reset streak
             if session.get('answered') == None:
-                session['currentStreak'] = 0
+                session['current_streak'] = 0
             return redirect(url_for('index'))
-        if session.get('board') != None:
-            if request.form.get('yes') is not None or request.form.get('no') is not None:
-                answer = True if request.form.get('yes') is not None else False
-                new_board = chess.Board(fen=session['board'])
-                target_square = session['target_square']
-                color = session['color']
-                attackers = getAttackers(new_board, target_square, color=color)
-                correct = (len(attackers) > 0) == answer
-                session['currentStreak'] = session['currentStreak'] + 1 if correct else 0
-                session['highScore'] = session['currentStreak'] if session['currentStreak'] > session['highScore'] else session['highScore']
-                session['answered'] = True
-                session['board'] = None
-                flash('Correct!' if correct else 'Incorrect!')
-                enable_answers = False
-                arrows = generateAttackerArrows(attackers, target_square)
-                answer_image = Markup(generateBoardImage(new_board, target_square, arrows))
-                return render_template('game/index.html',
-                                       board_image=answer_image,
-                                       num_moves=new_board.ply(),
-                                       question_text=generateQuestionText(color, target_square),
-                                       enable_answers=enable_answers,
-                                       currentStreak=session['currentStreak'],
-                                       highScore=session['highScore'],
-                                       time_to_generate=(round((time.perf_counter_ns()-time_start)/1000000000,5))
-                                       )
-                
 
+    # Check for existing board, generate one if none exists
+    if session.get('board') == None:
+        board_gen_timer = Timer()
+        new_question_dict = generate_random_question()
+        session['board_gen_time'] = board_gen_timer.elapsed()
+        session['question'] = new_question_dict
+        session['board'] = new_question_dict['board_fen']
 
-    if session.get('board') != None:
-        new_board = chess.Board(fen=session['board'])
-        target_square = session['target_square']
-        color = session['color']
-    else:
-        new_board = generateRandomBoard()
-        target_square = selectRandomSquare()
-        color = selectRandomColor()
-    attackers = getAttackers(new_board, target_square, color=color)
-    board_image = Markup(generateBoardImage(new_board, target_square))
-    session['board'] = new_board.fen()
-    session['target_square'] = target_square
-    session['color'] = color
     session['answered'] = None
+    return display_page(page_load_time)
+
+def generate_board_image(question_dict:dict) -> str:
+    difficulty = Difficulty(session.get('difficulty'))
+    return QUESTION_TYPE[difficulty](**question_dict).get_board_image()
+
+def generate_random_question() -> dict:
+    difficulty = Difficulty(session.get('difficulty',0))
+    return QUESTION_TYPE[difficulty]().to_dict()
+
+def generate_answer_image(question_dict:dict):
+    difficulty = Difficulty(session.get('difficulty',0))
+    return QUESTION_TYPE[difficulty](**question_dict).get_answer_image()
+
+def display_page(page_load_time: Timer, page_attrs: dict = {}):
+    question = page_attrs.get('question',session.get('question',{}))
+    num_moves = page_attrs.get('num_moves',question.get('num_moves',None))
+    answered = page_attrs.get('answered',session.get('answered'))
+    board_image = page_attrs.get('board_image',Markup(generate_board_image(question)) if not answered else Markup(generate_answer_image(question)))
+    current_streak = session.get('current_streak',0)
+    high_score = session.get('high_score',0)
+    page_gen_time = page_load_time.elapsed()
+    board_gen_time = page_attrs.get('board_gen_time',session.get('board_gen_time',0))
     return render_template('game/index.html',
-                           num_attackers=len(attackers),
+                           question=question,
+                           num_moves=num_moves,
                            board_image=board_image,
-                           num_moves=new_board.ply(),
-                           question_text=generateQuestionText(color, target_square),
-                           enable_answers=True,
-                           currentStreak=session['currentStreak'],
-                           highScore=session['highScore'],
-                           time_to_generate=(round((time.perf_counter_ns()-time_start)/1000000000,5))
+                           answered=answered,
+                           currentStreak=current_streak,
+                           highScore=high_score,
+                           page_gen_time=page_gen_time,
+                           board_gen_time=board_gen_time
                            )
-
-def generateRandomBoard(num_moves=None, rand_low=20, rand_high=60) -> chess.Board:
-    if num_moves == None:
-        num_moves = random.randint(rand_low, rand_high)
-    new_board = chess.Board()
-    for _ in range(num_moves):
-        legal_moves = list(new_board.legal_moves)
-        if len(legal_moves) > 0:
-            new_board.push(random.sample(legal_moves, 1)[0])
-    return new_board
-
-def generateBoardImage(board, target_square=None, arrows=None, size=None) -> str:
-    if target_square == None:
-        return chess.svg.board(board, size=size)
-    if arrows == None:
-        return chess.svg.board(board, fill={target_square: "#cc0000"}, size=size)
-    else:
-        return chess.svg.board(board, arrows=arrows, fill={target_square: "#cc0000"}, size=size)
-
-def selectRandomSquare() -> chess.Square:
-    return random.sample(chess.SQUARES, 1)[0]
-
-def selectRandomColor() -> int:
-    return random.sample([chess.WHITE, chess.BLACK, 2], 1)[0]
-
-def colorToName(color) -> str:
-    return (chess.COLOR_NAMES + ["either color"])[color]
-
-def getAttackers(board, square, color=None) -> list:
-    if color == None or color == 2:
-        white_attackers = board.attackers(chess.WHITE, square)
-        black_attackers = board.attackers(chess.BLACK, square)
-        return list(white_attackers) + list(black_attackers)
-    else:
-        return list(board.attackers(color, square))
-
-def generateAttackerArrows(attackers, target_square) -> list:
-    arrows = []
-    for attacker in attackers:
-        arrows.append((attacker, target_square))
-    return arrows
-
-def generateQuestionText(color, target_square) -> str:
-    return f'Is {colorToName(color)} attacking square {chess.SQUARE_NAMES[target_square]}?'

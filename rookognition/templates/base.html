@@ -47,11 +47,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
   {% block content %}{% endblock %}
 </section>
 <nav class="controller">
-  <p>{{question_text}}</p>
-  {% if enable_answers == True %}
+  <p>{{question['question_text']}}</p>
+  {% if not answered %}
   <form method="post">
-    <input type="submit" name="yes" value="Yes">
-    <input type="submit" name="no" value="No">
+    {% for answer in question['possible_answers'] %}
+    <input type="submit" name="answer" value="{{answer}}">
+    {% endfor %}
   </form>
   <br />
   {% endif %}
@@ -62,5 +63,5 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 </div>
 <footer>
   <p>v{{ app_config.VERSION }} <a href="https://github.com/3d12/rookognition"><i class="fa fa-github"></i></a></p>
-  <p>Page was generated in {{time_to_generate}}s, board position was generated in {{num_moves}} moves</p>
+  <p>Page was generated in {{page_gen_time}}s, board position was generated in {{board_gen_time}}s using {{num_moves}} random legal moves</p>
 </footer>
