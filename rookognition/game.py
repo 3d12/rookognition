@@ -1,5 +1,5 @@
 #Rookognition - A web-based chess vision exercise.
-#Copyright (C) 2024 Nick Edner
+#Copyright (C) 2025 Nick Edner
 
 #This program is free software: you can redistribute it and/or modify
 #it under the terms of the GNU Affero General Public License as published
