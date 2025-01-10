@@ -27,25 +27,25 @@ def test_index_post_as_first_call(client):
     assert b'Board' in response.data
 
 @pytest.mark.parametrize(('answer','validation'), (
-                         ('yes',b'Correct!'),
-                         ('no',b'Incorrect!')
+                         ('Yes',b'Correct!'),
+                         ('No',b'Incorrect!')
                          ))
 def test_index_answer(client, monkeypatch, answer, validation):
-    def generateTestBoard():
+    def generate_test_board(self):
         return chess.Board('2k5/1q6/8/8/8/2p5/1P6/1K6')
 
-    def generateTestSquare():
+    def generate_test_square(self):
         return chess.C3
 
-    def generateTestColor():
+    def generate_test_color(self):
         return chess.WHITE
 
-    monkeypatch.setattr('rookognition.game.generateRandomBoard', generateTestBoard)
-    monkeypatch.setattr('rookognition.game.selectRandomSquare', generateTestSquare)
-    monkeypatch.setattr('rookognition.game.selectRandomColor', generateTestColor)
+    monkeypatch.setattr('rookognition.question.BaseQuestion.generate_random_board', generate_test_board)
+    monkeypatch.setattr('rookognition.question.TargetSquareQuestion._select_random_square', generate_test_square)
+    monkeypatch.setattr('rookognition.question.TargetSquareQuestion._select_random_color', generate_test_color)
     response = client.get('/')
     response = client.post('/',
-                           data={answer:''}
+                           data={'answer':answer}
                            )
     assert validation in response.data
 
@@ -58,18 +58,18 @@ def test_index_newboard(client):
     assert b'Board' in response.data
 
 def test_index_sameboard(client, monkeypatch):
-    def generateTestBoard():
+    def generate_test_board(self):
         return chess.Board('2k5/1q6/8/8/8/2p5/1P6/1K6')
 
-    def generateTestSquare():
+    def generate_test_square(self):
         return chess.C3
 
-    def generateTestColor():
+    def generate_test_color(self):
         return chess.WHITE
 
-    monkeypatch.setattr('rookognition.game.generateRandomBoard', generateTestBoard)
-    monkeypatch.setattr('rookognition.game.selectRandomSquare', generateTestSquare)
-    monkeypatch.setattr('rookognition.game.selectRandomColor', generateTestColor)
+    monkeypatch.setattr('rookognition.question.BaseQuestion.generate_random_board', generate_test_board)
+    monkeypatch.setattr('rookognition.question.TargetSquareQuestion._select_random_square', generate_test_square)
+    monkeypatch.setattr('rookognition.question.TargetSquareQuestion._select_random_color', generate_test_color)
     response = client.get('/')
     response = client.post('/',
                            data={'test':''}
