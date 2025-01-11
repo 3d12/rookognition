@@ -18,36 +18,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 {% extends 'base.html' %}
 
 {% block header %}
-<!--
-<h1>{% block title %}Board - {{num_moves}} moves{% endblock %}</h1>
--->
+<h1>{% block title %}Demo Board{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
   <form method="post">
-    <input type="submit" name="select_difficulty" value="Select Difficulty">
+    <p>Select Difficulty:</p>
+    <input type="submit" name="difficulty" value="Easy">
+    <input type="submit" name="difficulty" value="Medium">
+    <input type="submit" name="difficulty" value="Hard">
   </form>
-  <p>{{question['question_text']}}</p>
-  {% if answered %}
-  <h2>Answer: {{ answer }}</h2>
-  <br />
-  <form method="post">
-    <input type="submit" name="newBoard" value="New Board" autofocus>
-  </form>
-  {% else %}
-  <form method="post">
-    {% for answer in question['possible_answers'] %}
-    {% if answer == '[text input]' %}
-    <input type="text" name="answer" value="" placeholder="answer" autofocus>
-    <input type="submit" name="submit" value="Submit">
-    {% else %}
-    <input type="submit" name="answer" value="{{answer}}">
-    {% endif %}
-    {% endfor %}
-  </form>
-  <br />
-  <form method="post">
-    <input type="submit" name="newBoard" value="New Board">
-  </form>
-  {% endif %}
 {% endblock %}

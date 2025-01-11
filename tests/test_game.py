@@ -44,12 +44,22 @@ def test_index_answer(client, monkeypatch, answer, validation):
     monkeypatch.setattr('rookognition.question.TargetSquareQuestion._select_random_square', generate_test_square)
     monkeypatch.setattr('rookognition.question.TargetSquareQuestion._select_random_color', generate_test_color)
     response = client.get('/')
+    # Difficulty Select
+    response = client.post('/',
+                          data={'difficulty':'Easy'}
+                          )
+    # Follow redirect
+    response = client.get(response.headers['Location'])
+    # Submit answer
     response = client.post('/',
                            data={'answer':answer}
                            )
     assert validation in response.data
 
 def test_index_newboard(client):
+    reponse = client.post('/',
+                          data={'difficulty':'Easy'}
+                          )
     response = client.post('/',
                   data={'newBoard':''}
                   )

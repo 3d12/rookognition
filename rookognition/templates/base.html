@@ -44,21 +44,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
       <div class="flash">{{ message }}</div>
     {% endif%}
   {% endfor %}
-  {% block content %}{% endblock %}
+  {{board_image}}
 </section>
 <nav class="controller">
-  <p>{{question['question_text']}}</p>
-  {% if not answered %}
-  <form method="post">
-    {% for answer in question['possible_answers'] %}
-    <input type="submit" name="answer" value="{{answer}}">
-    {% endfor %}
-  </form>
-  <br />
-  {% endif %}
-  <form method="post">
-    <input type="submit" name="newBoard" value="New Board">
-  </form>
+  {% block content %}{% endblock %}
 </nav>
 </div>
 <footer>

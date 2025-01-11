@@ -30,18 +30,35 @@ def index():
 
     # Check difficulty, render difficulty select if none
     if session.get('difficulty') == None:
-        # TODO: Implement difficulty select template
-        # return render_template('game/difficulty.html', time_to_generate=page_load_time.elapsed())
-        # Default to Easy until implemented
-        session['difficulty'] = Difficulty.EASY.value
+        if request.form.get('difficulty') != None:
+            difficulty_str = str(request.form.get('difficulty'))
+            match difficulty_str:
+                case 'Easy': session['difficulty'] = Difficulty.EASY.value
+                case 'Medium': session['difficulty'] = Difficulty.MEDIUM.value
+                case 'Hard': session['difficulty'] = Difficulty.HARD.value
+                # Default invalid values to EASY difficulty
+                case _: session['difficulty'] = Difficulty.EASY.value
+            return redirect(url_for('index'))
+        # Generate a demo question for this page, since there's no active puzzle
+        board_gen_timer = Timer()
+        demo_question = QUESTION_TYPE[Difficulty.EASY]()
+        board_gen_time = board_gen_timer.elapsed()
+        return display_page(page_load_time,
+                    page_attrs={
+                        'question': demo_question.to_dict(),
+                        'page': 'game/difficulty.html',
+                        'board_image': Markup(demo_question.get_answer_image()),
+                        'board_gen_time': board_gen_time
+                    }
+                )
 
     if request.method == 'POST':
         # Check for answer, if exists we can check it for correctness
-        if request.form.get('answer') != None:
-            answer = request.form.get('answer')
+        if request.form.get('answer') not in ['',None]:
+            session['answer'] = request.form.get('answer')
             session['answered'] = True
             question = session.get('question',{})
-            correct = answer == question.get('correct_answer')
+            correct = str(session["answer"]) == str(question.get('correct_answer'))
             if correct == True:
                 msg = 'Correct!'
                 session['current_streak'] = session.get('current_streak',0) + 1
@@ -61,6 +78,13 @@ def index():
                 session['current_streak'] = 0
             return redirect(url_for('index'))
 
+        # Check for return to difficulty select
+        if request.form.get('select_difficulty') != None:
+            session['board'] = None
+            session['difficulty'] = None
+            session['current_streak'] = 0
+            return redirect(url_for('index'))
+
     # Check for existing board, generate one if none exists
     if session.get('board') == None:
         board_gen_timer = Timer()
@@ -78,26 +102,29 @@ def generate_board_image(question_dict:dict) -> str:
 
 def generate_random_question() -> dict:
     difficulty = Difficulty(session.get('difficulty',0))
-    return QUESTION_TYPE[difficulty]().to_dict()
+    return QUESTION_TYPE[difficulty](difficulty=difficulty).to_dict()
 
 def generate_answer_image(question_dict:dict):
     difficulty = Difficulty(session.get('difficulty',0))
     return QUESTION_TYPE[difficulty](**question_dict).get_answer_image()
 
 def display_page(page_load_time: Timer, page_attrs: dict = {}):
+    page = page_attrs.get('page','game/index.html')
     question = page_attrs.get('question',session.get('question',{}))
     num_moves = page_attrs.get('num_moves',question.get('num_moves',None))
     answered = page_attrs.get('answered',session.get('answered'))
-    board_image = page_attrs.get('board_image',Markup(generate_board_image(question)) if not answered else Markup(generate_answer_image(question)))
+    answer = page_attrs.get('answer', session.get('answer'))
+    board_image = page_attrs.get('board_image') if 'board_image' in page_attrs else Markup(generate_board_image(question)) if not answered else Markup(generate_answer_image(question))
     current_streak = session.get('current_streak',0)
     high_score = session.get('high_score',0)
     page_gen_time = page_load_time.elapsed()
     board_gen_time = page_attrs.get('board_gen_time',session.get('board_gen_time',0))
-    return render_template('game/index.html',
+    return render_template(page,
                            question=question,
                            num_moves=num_moves,
                            board_image=board_image,
                            answered=answered,
+                           answer=answer,
                            currentStreak=current_streak,
                            highScore=high_score,
                            page_gen_time=page_gen_time,

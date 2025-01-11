@@ -88,7 +88,7 @@ class BaseQuestion(object):
 
 
 class TargetSquareQuestion(BaseQuestion):
-    def __init__(self, board=None, board_fen=None, difficulty=Difficulty.EASY, color=None, target_square=None, possible_answers=None, correct_answer=None, **kwargs) -> None:
+    def __init__(self, board=None, board_fen=None, difficulty=None, color=None, target_square=None, possible_answers=None, correct_answer=None, **kwargs) -> None:
         self.difficulty = difficulty
         self.color = color
         self.target_square = target_square
@@ -127,17 +127,19 @@ class TargetSquareQuestion(BaseQuestion):
     def _color_to_name(self, color:int) -> str:
         return (chess.COLOR_NAMES + ["either color"])[color]
 
-    def get_difficulty(self) -> Difficulty:
+    def get_difficulty(self):
         return self.difficulty
 
     def get_question_text(self) -> str:
         if self.color == None or self.target_square == None:
             raise Exception('get_question_text() requires color and target_square defined for type TargetSquareQuestion')
-        # Temp catch for other difficulties until they are implemented
-        if self.difficulty != Difficulty.EASY:
-            raise Exception(f"Invalid difficulty: {self.difficulty.name}")
-        #if self.difficulty == Difficulty.EASY:
-        return f'Is {self._color_to_name(self.color)} attacking square {chess.SQUARE_NAMES[self.target_square]}?'
+        if self.difficulty == Difficulty.EASY:
+            return f'Is {self._color_to_name(self.color)} attacking square {chess.SQUARE_NAMES[self.target_square]}?'
+        elif self.difficulty == Difficulty.MEDIUM or self.difficulty == Difficulty.HARD:
+            return f'How many pieces of {self._color_to_name(self.color)} are attacking square {chess.SQUARE_NAMES[self.target_square]}?'
+        else:
+            raise Exception(f"Invalid difficulty: {self.difficulty.name if self.difficulty != None else 'None'}")
+
 
     def get_color(self):
         return self.color
@@ -187,18 +189,39 @@ class TargetSquareQuestion(BaseQuestion):
         if getattr(self, 'difficulty', None) == None:
             if difficulty == None:
                 raise Exception("No difficulty provided, cannot generate TargetSquareQuestion")
-            print(f"DEBUG: updating difficulty to new difficulty: {difficulty.name}")
             self.difficulty = difficulty
-        # Temp catch for other difficulties until they are implemented
-        if self.difficulty != Difficulty.EASY:
-            raise Exception(f"Invalid difficulty: {self.difficulty.name}")
-        print(f"DEBUG: generating question of difficulty {self.difficulty.name}")
+        print(f"DEBUG: generating question of difficulty {self.difficulty.name if self.difficulty != None else 'None'}")
         if self.difficulty == Difficulty.EASY:
             self.color = self._select_random_color()
             self.target_square = self._select_random_square()
             self.question_text = self.get_question_text()
             self.possible_answers = ['Yes','No']
             self.correct_answer = 'Yes' if len(self.get_attackers()) > 0 else 'No'
+        elif self.difficulty == Difficulty.MEDIUM:
+            self.color = self._select_random_color()
+            self.target_square = self._select_random_square()
+            self.question_text = self.get_question_text()
+            self.correct_answer = len(self.get_attackers())
+            answers = []
+            answers.append(self.correct_answer)
+            # Generate wrong answers
+            while len(answers) < 4:
+                random_modifier = random.sample(range(1,5), 1)[0]
+                random_orientation = random.sample([-1,1], 1)[0]
+                new_answer = self.correct_answer + (random_modifier * random_orientation)
+                if new_answer < 0:
+                    continue
+                if new_answer not in answers:
+                    answers.append(new_answer)
+            self.possible_answers = answers
+        elif self.difficulty == Difficulty.HARD:
+            self.color = self._select_random_color()
+            self.target_square = self._select_random_square()
+            self.question_text = self.get_question_text()
+            self.correct_answer = len(self.get_attackers())
+            self.possible_answers = ['[text input]']
+        else:
+            raise Exception(f"Invalid difficulty: {self.difficulty.name if self.difficulty != None else 'None'}")
         return self
 
 
@@ -207,7 +230,7 @@ class TargetSquareQuestion(BaseQuestion):
 #----------------------------------
 
 QUESTION_TYPE = {
-        Difficulty.EASY: TargetSquareQuestion
-        #Difficulty.MEDIUM: ??
-        #Difficulty.HARD: ??
+        Difficulty.EASY: TargetSquareQuestion,
+        Difficulty.MEDIUM: TargetSquareQuestion,
+        Difficulty.HARD: TargetSquareQuestion
         }
